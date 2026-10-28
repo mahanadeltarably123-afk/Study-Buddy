@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ app_name }} - AI Study Companion</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+  <!-- Main Container -->
+  <div class="flex-1 flex overflow-hidden">
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-64 bg-slate-900/80 border-r border-slate-800 flex flex-col justify-between p-4 backdrop-blur-md">
+      <div>
+        <!-- Logo -->
+        <div class="flex items-center space-x-3 px-3 py-4 mb-6">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+            <i data-lucide="brain-circuit" class="w-6 h-6 text-white"></i>
+          </div>
+          <div>
+            <h1 class="font-extrabold text-base tracking-tight text-white flex items-center gap-1.5">
+              Study Buddy
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400 font-bold border border-indigo-500/30">PRO</span>
+            </h1>
+            <p class="text-[11px] text-slate-400">Active Recall & AI Tutor</p>
+          </div>
+        </div>
+
+        <!-- Nav Items -->
+        <nav class="space-y-1.5">
+          <button onclick="switchView('dashboard')" data-view="dashboard" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition bg-indigo-600 text-white">
+            <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+            <span>Dashboard</span>
+          </button>
+          
+          <button onclick="switchView('decks')" data-view="decks" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-slate-400 hover:bg-slate-800">
+            <i data-lucide="layers" class="w-4 h-4"></i>
+            <span>Flashcards</span>
+          </button>
+
+          <button onclick="switchView('tutor')" data-view="tutor" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-slate-400 hover:bg-slate-800">
+            <i data-lucide="sparkles" class="w-4 h-4 text-indigo-400"></i>
+            <span>AI Study Tutor</span>
+          </button>
+
+          <button onclick="switchView('notes')" data-view="notes" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-slate-400 hover:bg-slate-800">
+            <i data-lucide="book-open" class="w-4 h-4"></i>
+            <span>Smart Notes</span>
+          </button>
+
+          <button onclick="switchView('pomodoro')" data-view="pomodoro" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-slate-400 hover:bg-slate-800">
+            <i data-lucide="timer" class="w-4 h-4"></i>
+            <span>Pomodoro Focus</span>
+          </button>
+
+          <button onclick="switchView('quizzes')" data-view="quizzes" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition text-slate-400 hover:bg-slate-800">
+            <i data-lucide="award" class="w-4 h-4"></i>
+            <span>Practice Tests</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Settings & Version -->
+      <div class="pt-4 border-t border-slate-800 space-y-2">
+        <button onclick="switchView('settings')" data-view="settings" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800">
+          <i data-lucide="settings" class="w-4 h-4"></i>
+          <span>Settings & AI Keys</span>
+        </button>
+        <div class="px-3 py-1 flex items-center justify-between text-[11px] text-slate-400">
+          <span>Version {{ version }}</span>
+          <span class="flex items-center gap-1 text-emerald-400">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> Live
+          </span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Content Workspace -->
+    <main class="flex-1 overflow-y-auto p-8 relative">
+
+      <!-- ================= VIEW: DASHBOARD ================= -->
+      <section id="view-dashboard" class="view-panel space-y-8 max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-3xl font-black text-white tracking-tight">Study Overview</h2>
+            <p class="text-sm text-slate-400 mt-1">Daily spaced repetition, active recall status, and focus metrics.</p>
+          </div>
+          <div class="flex items-center space-x-3">
+            <button onclick="switchView('tutor')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold text-xs shadow-lg shadow-indigo-600/30 flex items-center space-x-2">
+              <i data-lucide="message-square" class="w-4 h-4"></i>
+              <span>Ask AI Tutor</span>
+            </button>
+            <button onclick="switchView('pomodoro')" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-semibold text-xs flex items-center space-x-2">
+              <i data-lucide="play" class="w-4 h-4"></i>
+              <span>Start Focus</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Metrics Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div class="glass-panel p-5 rounded-2xl">
+            <div class="text-xs font-semibold text-slate-400 mb-1 flex items-center justify-between">
+              <span>Cards Due</span>
+              <i data-lucide="clock" class="w-4 h-4 text-rose-400"></i>
+            </div>
+            <div id="stat-cards-due" class="text-3xl font-extrabold text-white">0</div>
+            <p class="text-[11px] text-rose-400 mt-1">Ready for review</p>
+          </div>
+
+          <div class="glass-panel p-5 rounded-2xl">
+            <div class="text-xs font-semibold text-slate-400 mb-1 flex items-center justify-between">
+              <span>Total Decks</span>
+              <i data-lucide="layers" class="w-4 h-4 text-indigo-400"></i>
+            </div>
+            <div id="stat-decks" class="text-3xl font-extrabold text-white">0</div>
+            <p class="text-[11px] text-slate-400 mt-1">Organized subjects</p>
+          </div>
+
+          <div class="glass-panel p-5 rounded-2xl">
+            <div class="text-xs font-semibold text-slate-400 mb-1 flex items-center justify-between">
+              <span>Smart Notes</span>
+              <i data-lucide="file-text" class="w-4 h-4 text-purple-400"></i>
+            </div>
+            <div id="stat-notes" class="text-3xl font-extrabold text-white">0</div>
+            <p class="text-[11px] text-slate-400 mt-1">Summarized guides</p>
+          </div>
+
+          <div class="glass-panel p-5 rounded-2xl">
+            <div class="text-xs font-semibold text-slate-400 mb-1 flex items-center justify-between">
+              <span>Focus Today</span>
+              <i data-lucide="timer" class="w-4 h-4 text-emerald-400"></i>
+            </div>
+            <div id="stat-focus-time" class="text-3xl font-extrabold text-white">0 hrs</div>
+            <p class="text-[11px] text-emerald-400 mt-1">Pomodoro time</p>
+          </div>
+
+          <div class="glass-panel p-5 rounded-2xl">
+            <div class="text-xs font-semibold text-slate-400 mb-1 flex items-center justify-between">
+              <span>Avg Test Score</span>
+              <i data-lucide="trophy" class="w-4 h-4 text-amber-400"></i>
+            </div>
+            <div id="stat-quizzes" class="text-3xl font-extrabold text-white">0%</div>
+            <p class="text-[11px] text-amber-400 mt-1">Quiz accuracy</p>
+          </div>
+        </div>
+
+        <!-- Goals & Active Tasks -->
+        <div class="glass-panel p-6 rounded-3xl">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center space-x-2">
+              <i data-lucide="check-circle" class="w-5 h-5 text-indigo-400"></i>
+              <h3 class="text-lg font-bold text-white">Daily Study Goals & Milestones</h3>
+            </div>
+            <button onclick="createNewGoalPrompt()" class="text-xs font-semibold text-indigo-400 hover:text-indigo-300 flex items-center space-x-1">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>Add Goal</span>
+            </button>
+          </div>
+          <div id="dashboard-goals-list" class="space-y-2.5">
+            <div class="text-slate-400 text-sm">Loading milestones...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW: FLASHCARDS (DECKS) ================= -->
+      <section id="view-decks" class="view-panel hidden space-y-6 max-w-6xl mx-auto">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-3xl font-black text-white">Flashcard Decks</h2>
+            <p class="text-sm text-slate-400 mt-1">Spaced Repetition (SuperMemo SM-2) for long-term memory mastery.</p>
+          </div>
+          <div class="flex items-center space-x-3">
+            <button onclick="openCreateDeckModal()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-lg flex items-center space-x-2">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              <span>Create Deck</span>
+            </button>
+          </div>
+        </div>
+        <div id="decks-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+      </section>
+
+      <!-- ================= VIEW: FLASHCARD REVIEW ================= -->
+      <section id="view-review" class="view-panel hidden max-w-4xl mx-auto py-8">
+        <div class="mb-6 flex items-center justify-between">
+          <button onclick="switchView('decks')" class="text-xs font-semibold text-slate-400 hover:text-white flex items-center space-x-1">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            <span>Exit Review</span>
+          </button>
+          <span class="text-xs px-3 py-1 rounded-full bg-slate-800 text-indigo-300 font-semibold border border-slate-700">
+            Active Recall Mode
+          </span>
+        </div>
+        <div id="review-card-area"></div>
+      </section>
+
+      <!-- ================= VIEW: SMART NOTES ================= -->
+      <section id="view-notes" class="view-panel hidden max-w-6xl mx-auto h-[calc(100vh-8rem)] flex flex-col">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-2xl font-black text-white">Smart Notes & AI Summarizer</h2>
+            <p class="text-xs text-slate-400">Capture insights and auto-generate TL;DR summaries and concept mindmaps.</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="createNewNote()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center space-x-1 shadow-md">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>New Note</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 overflow-hidden">
+          <!-- Notes List -->
+          <div class="glass-panel rounded-2xl p-4 overflow-y-auto space-y-2 border border-slate-800" id="notes-list"></div>
+
+          <!-- Note Editor -->
+          <div class="md:col-span-2 glass-panel rounded-2xl p-6 flex flex-col justify-between border border-slate-800 overflow-y-auto space-y-4">
+            <div class="space-y-3">
+              <input type="text" id="note-title-input" class="w-full bg-transparent text-xl font-bold text-white border-b border-slate-800 pb-2 focus:outline-none focus:border-indigo-500" placeholder="Note Title...">
+              <textarea id="note-content-input" rows="12" class="w-full bg-slate-900/60 text-slate-200 p-4 rounded-xl text-sm border border-slate-800 focus:outline-none focus:border-indigo-500 font-mono leading-relaxed" placeholder="Write markdown notes here..."></textarea>
+              
+              <!-- AI Summary Box -->
+              <div id="note-summary-display" class="hidden p-4 rounded-xl bg-indigo-950/30 border border-indigo-500/30 text-slate-300 text-xs markdown-body"></div>
+            </div>
+
+            <div class="flex items-center justify-between pt-4 border-t border-slate-800">
+              <div class="flex items-center space-x-2">
+                <button onclick="saveActiveNote()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold">
+                  Save Changes
+                </button>
+                <button onclick="summarizeActiveNote('bullet_points')" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 text-xs font-semibold flex items-center space-x-1.5">
+                  <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                  <span>AI Summary</span>
+                </button>
+                <button onclick="summarizeActiveNote('feynman')" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-purple-300 border border-slate-700 text-xs font-semibold">
+                  Feynman Breakdown
+                </button>
+              </div>
+              <button onclick="deleteActiveNote()" class="text-slate-500 hover:text-rose-400 p-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW: AI TUTOR ================= -->
+      <section id="view-tutor" class="view-panel hidden max-w-4xl mx-auto h-[calc(100vh-8rem)] flex flex-col">
+        <!-- Tutor Header -->
+        <div class="flex items-center justify-between mb-4 pb-4 border-b border-slate-800">
+          <div class="flex items-center space-x-3">
+            <div class="p-2.5 rounded-xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/30">
+              <i data-lucide="bot" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <h2 class="text-xl font-bold text-white">AI Study Tutor</h2>
+              <p class="text-xs text-slate-400">Ask questions, request analogies, code walkthroughs, or exam prep drills.</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <!-- Persona Selector -->
+            <select id="tutor-persona-select" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer">
+              <option value="Socratic Tutor">💡 Socratic Tutor</option>
+              <option value="Feynman Explainer">🧠 Feynman Explainer</option>
+              <option value="Exam Coach">🎯 Exam Coach</option>
+              <option value="Code Specialist">💻 Code Specialist</option>
+            </select>
+            <button onclick="clearTutorHistory()" class="p-2 text-slate-400 hover:text-rose-400 rounded-xl hover:bg-slate-800" title="Clear Chat">
+              <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Chat History -->
+        <div id="tutor-messages" class="flex-1 overflow-y-auto p-4 space-y-4">
+          <div class="text-center py-12 text-slate-400 text-sm">
+            <div class="text-4xl mb-3">🎓</div>
+            <h3 class="font-bold text-white text-base mb-1">Hello! I am your AI Study Buddy.</h3>
+            <p class="text-xs text-slate-400 max-w-md mx-auto mb-6">Ask me anything about algorithms, system design, biology, or paste a problem you're stuck on!</p>
+            
+            <!-- Quick prompt badges -->
+            <div class="flex flex-wrap justify-center gap-2 max-w-lg mx-auto">
+              <button onclick="sendTutorMessage('Explain Big-O time complexity like I am 10 years old using the Feynman technique.')" class="text-xs px-3 py-1.5 rounded-full bg-slate-800/80 hover:bg-slate-700 text-indigo-300 border border-slate-700 transition">
+                "Explain Big-O like I'm 10"
+              </button>
+              <button onclick="sendTutorMessage('What is the difference between BFS and DFS graph traversals?')" class="text-xs px-3 py-1.5 rounded-full bg-slate-800/80 hover:bg-slate-700 text-indigo-300 border border-slate-700 transition">
+                "BFS vs DFS Differences"
+              </button>
+              <button onclick="sendTutorMessage('Quiz me on Python generators and async/await.')" class="text-xs px-3 py-1.5 rounded-full bg-slate-800/80 hover:bg-slate-700 text-indigo-300 border border-slate-700 transition">
+                "Quiz me on Python Async"
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input Bar -->
+        <div class="pt-4 border-t border-slate-800">
+          <form onsubmit="event.preventDefault(); sendTutorMessage();" class="flex items-center space-x-2">
+            <input type="text" id="tutor-user-input" class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500 placeholder-slate-500 shadow-inner" placeholder="Ask your tutor anything...">
+            <button type="submit" class="p-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg transition">
+              <i data-lucide="send" class="w-4 h-4"></i>
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <!-- ================= VIEW: POMODORO ================= -->
+      <section id="view-pomodoro" class="view-panel hidden max-w-xl mx-auto py-12 text-center">
+        <h2 class="text-3xl font-black text-white mb-2">Pomodoro Focus Timer</h2>
+        <p class="text-sm text-slate-400 mb-8">Maintain deep focus with structured intervals and automatic streak logging.</p>
+
+        <!-- Mode Selectors -->
+        <div class="inline-flex p-1.5 rounded-2xl bg-slate-900 border border-slate-800 mb-8">
+          <button onclick="setPomodoroMode('work')" data-mode="work" class="pomodoro-tab px-5 py-2 rounded-xl text-xs font-bold transition bg-indigo-600 text-white">
+            Focus (25m)
+          </button>
+          <button onclick="setPomodoroMode('short_break')" data-mode="short_break" class="pomodoro-tab px-5 py-2 rounded-xl text-xs font-bold transition text-slate-400">
+            Short Break (5m)
+          </button>
+          <button onclick="setPomodoroMode('long_break')" data-mode="long_break" class="pomodoro-tab px-5 py-2 rounded-xl text-xs font-bold transition text-slate-400">
+            Long Break (15m)
+          </button>
+        </div>
+
+        <!-- Timer Circle / Ring -->
+        <div id="pomodoro-ring" class="glass-panel w-72 h-72 rounded-full mx-auto flex flex-col items-center justify-center border-4 border-indigo-500/20 mb-8 transition-all">
+          <div id="pomodoro-timer-display" class="text-6xl font-black text-white tracking-tighter">25:00</div>
+          <p class="text-xs uppercase font-bold text-indigo-400 tracking-widest mt-2">Deep Study Interval</p>
+        </div>
+
+        <!-- Controls -->
+        <div class="flex items-center justify-center space-x-4">
+          <button id="pomodoro-play-btn" onclick="togglePomodoroTimer()" class="w-14 h-14 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center shadow-xl shadow-indigo-600/30 transition transform hover:scale-105">
+            <i data-lucide="play" class="w-6 h-6"></i>
+          </button>
+          <button onclick="resetPomodoroTimer()" class="p-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition" title="Reset">
+            <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </section>
+
+      <!-- ================= VIEW: QUIZZES ================= -->
+      <section id="view-quizzes" class="view-panel hidden max-w-4xl mx-auto space-y-6">
+        <div id="quizzes-list-view">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h2 class="text-3xl font-black text-white">Practice Quizzes</h2>
+              <p class="text-sm text-slate-400 mt-1">Self-testing accelerates retention through active retrieval practice.</p>
+            </div>
+            <button onclick="generateQuizPrompt()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-lg flex items-center space-x-2">
+              <i data-lucide="sparkles" class="w-4 h-4"></i>
+              <span>Generate Quiz</span>
+            </button>
+          </div>
+          <div id="quizzes-list-container" class="space-y-3"></div>
+        </div>
+        <div id="active-quiz-container" class="hidden"></div>
+      </section>
+
+      <!-- ================= VIEW: SETTINGS ================= -->
+      <section id="view-settings" class="view-panel hidden max-w-2xl mx-auto space-y-6">
+        <div>
+          <h2 class="text-3xl font-black text-white">Settings & AI Configuration</h2>
+          <p class="text-sm text-slate-400 mt-1">Configure your AI providers, local/offline mode, and API keys.</p>
+        </div>
+
+        <div class="glass-panel p-8 rounded-3xl space-y-6">
+          <div>
+            <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Active AI Tutor Provider</label>
+            <select id="settings-provider-select" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500">
+              <option value="heuristic">Built-in Heuristic Engine (100% Offline / Zero API Key Required)</option>
+              <option value="gemini">Google Gemini API (Gemini 1.5 Flash)</option>
+              <option value="openai">OpenAI API (GPT-4o Mini)</option>
+              <option value="groq">Groq API (Llama 3.3 70B)</option>
+              <option value="ollama">Ollama (Local Self-Hosted LLM)</option>
+            </select>
+            <p class="text-[11px] text-slate-400 mt-1.5">Offline mode is pre-loaded with comprehensive academic & technical knowledge.</p>
+          </div>
+
+          <div class="space-y-4 pt-4 border-t border-slate-800">
+            <div>
+              <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Google Gemini API Key</label>
+              <input type="password" id="settings-gemini-key" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="AIzaSy...">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase text-slate-400 mb-1">OpenAI API Key</label>
+              <input type="password" id="settings-openai-key" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="sk-...">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Groq API Key</label>
+              <input type="password" id="settings-groq-key" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="gsk_...">
+            </div>
+          </div>
+
+          <button onclick="saveSettings()" class="w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-lg transition">
+            Save Settings
+          </button>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
