@@ -1,0 +1,5 @@
+{
+  "name": "Study Buddy",
+  "description": "An AI-powered educational assistant that transforms recorded lectures into summaries, quizzes, flashcards, and interactive study notes.",
+  "requestFramePermissions": []
+}

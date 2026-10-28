@@ -1,18 +1,9 @@
 {
-  "version": 2,
-  "builds": [
+  "framework": "vite",
+  "rewrites": [
     {
-      "src": "app/main.py",
-      "use": "@vercel/python"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "app/main.py"
-    }
-  ],
-  "env": {
-    "AI_PROVIDER": "heuristic"
-  }
+  ]
 }

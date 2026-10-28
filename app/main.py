@@ -15,6 +15,7 @@ from app.routers.tutor import router as tutor_router
 from app.routers.quizzes import router as quizzes_router
 from app.routers.pomodoro import router as pomodoro_router
 from app.routers.stats import router as stats_router, goals_router, settings_router
+from app.routers.lectures import router as lectures_router
 
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
@@ -64,6 +65,7 @@ app.include_router(pomodoro_router)
 app.include_router(stats_router)
 app.include_router(goals_router)
 app.include_router(settings_router)
+app.include_router(lectures_router)
 
 @app.get("/health", tags=["Health"])
 async def health_check():

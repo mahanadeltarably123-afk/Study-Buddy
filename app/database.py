@@ -76,6 +76,23 @@ CREATE TABLE IF NOT EXISTS study_goals (
     is_completed INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS workspaces (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    color TEXT DEFAULT '#4C6FFF',
+    user_id TEXT DEFAULT 'default_user',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS lectures (
+    id TEXT PRIMARY KEY,
+    workspace_id TEXT DEFAULT 'default',
+    title TEXT DEFAULT 'Untitled',
+    data_json TEXT NOT NULL,
+    user_id TEXT DEFAULT 'default_user',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 """
 
 async def get_db() -> AsyncGenerator[aiosqlite.Connection, None]:

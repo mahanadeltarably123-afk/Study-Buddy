@@ -1,0 +1,16 @@
+fastapi==0.109.0
+uvicorn==0.27.0
+python-multipart==0.0.7
+langchain==0.1.5
+langchain-community==0.0.17
+langchain-core==0.1.18
+chromadb==0.4.22
+sentence-transformers==2.3.1
+openai-whisper==20231117
+tiktoken==0.5.2
+numpy
+torch
+python-dotenv==1.0.1
+ffmpeg-python==0.2.0
+python-jose[cryptography]
+passlib[bcrypt]
